@@ -66,3 +66,9 @@ class FNN():
                 parameters["W" + str(level)] = np.random.randn(self.size_of_each_layer[level], self.size_of_each_layer[level - 1]) * np.sqrt(2/ (self.size_of_each_layer[level - 1] + self.size_of_each_layer[level]))
             parameters["b" + str(level)] = np.zeros((self.size_of_each_layer[level], 1))
         return parameters
+    def grad_initialisation(self):
+        grad={}
+        for level in range(1, self.no_of_layer):
+            grad["W" + str(level)] = np.zeros((self.size_of_each_layer[level], self.size_of_each_layer[level - 1]))
+            grad["b" + str(level)] = np.zeros((self.size_of_each_layer[level], 1))
+        return grad
