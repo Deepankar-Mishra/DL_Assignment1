@@ -66,9 +66,26 @@ class FNN():
                 parameters["W" + str(level)] = np.random.randn(self.size_of_each_layer[level], self.size_of_each_layer[level - 1]) * np.sqrt(2/ (self.size_of_each_layer[level - 1] + self.size_of_each_layer[level]))
             parameters["b" + str(level)] = np.zeros((self.size_of_each_layer[level], 1))
         return parameters
+
     def grad_initialisation(self):
         grad={}
         for level in range(1, self.no_of_layer):
             grad["W" + str(level)] = np.zeros((self.size_of_each_layer[level], self.size_of_each_layer[level - 1]))
             grad["b" + str(level)] = np.zeros((self.size_of_each_layer[level], 1))
         return grad
+    def Forward_Prop(self, x):
+        pre_actn_values = {}
+        post_actn_values = {}
+
+        post_actn_values['h0'] = x.reshape(len(x),1)
+
+        # From layer 1 to last_layer-1
+        for level in range(1, self.no_of_layer-1):
+            pre_actn_values['a' + str(level)] = self.parameters['b' + str(level)] + np.matmul(self.parameters['W' + str(level)], post_actn_values['h' + str(level-1)])
+            post_actn_values['h' + str(level)] = self.activation_function(pre_actn_values['a' + str(level)],output_layer=0, return_derivative=0)
+
+        # Last layer
+        pre_actn_values['a' + str(self.no_of_layer-1)] = self.parameters['b' + str(self.no_of_layer-1)] + + np.matmul(self.parameters['W' + str(self.no_of_layer-1)], post_actn_values['h' + str(self.no_of_layer-1-1)])
+        post_actn_values['h' + str(self.no_of_layer-1)] = self.activation_function(pre_actn_values['a' + str(self.no_of_layer-1)],output_layer=1,return_derivative=0)
+
+        return post_actn_values, pre_actn_values
