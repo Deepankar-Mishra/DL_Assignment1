@@ -148,13 +148,13 @@ class FNN():
             x = x_test[i]
             y = y_test[i]
             
-            activations,pre_activations = self.forwardPropagation(x)
-            predicted_class = np.argmax(activations['h' + str(self.L-1)])
+            post_actn_values,pre_actn_values = self.forwardPropagation(x)
+            predicted_class = np.argmax(post_actn_values['h' + str(self.L-1)])
             actual_class = np.argmax(y)
             
             y_true.append(actual_class)
             y_pred.append(predicted_class)
-            losses.append(self.loss_value(activations['h' + str(self.L-1)], y))
+            losses.append(self.loss_value(post_actn_values['h' + str(self.L-1)], y))
         
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
