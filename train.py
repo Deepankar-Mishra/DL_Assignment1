@@ -164,3 +164,35 @@ class FNN():
         loss = np.mean(losses)
         
         return accuracy, loss, y_true, y_pred
+    def SGD(self,x_train, y_train, x_val, y_val, epochs):
+        # Loop over the specified number of epochs
+        for epoch in range(epochs):
+            print("Epoch ---- ",epoch)
+            # Loop over the training examples
+            for i in tqdm(range(len(x_train)), total=len(x_train)):
+                #Initialise grads
+                init_grad=self.grad_initialisation()
+                
+                x = x_train[i]
+                y = y_train[i]            
+                # Forward propagation implemented
+                post_actn_values, pre_actn_values = self.Forward_Prop(x)
+                
+                # Backward propagation implemented
+                new_Grad = self.Back_Prop(y, post_actn_values, pre_actn_values, self.parameters)
+                
+                #New value of all parameters
+                self.parameters = {key: self.parameters[key] - self.L_rate*new_Grad[key] for key in self.parameters}
+
+                
+            #Calculate losses and accuracy for train and validation set.
+            Accuracy_Train, Loss_Train = self.calculate_performance(x_train, y_train)
+            Accuracy_validation, Loss_validation = self.calculate_performance(x_val, y_val)
+            
+            # Training and validation accuracy and loss
+            print("Training Accuracy :- ", Accuracy_Train)
+            print("Validation Accuracy :- ", Accuracy_validation)
+            print("Training Loss :- ", Loss_Train)
+            print("Validation Loss :- ", Loss_validation)
+            
+        return
