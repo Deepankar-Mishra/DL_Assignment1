@@ -148,7 +148,7 @@ class FNN():
             x = x_test[i]
             y = y_test[i]
             
-            post_actn_values,pre_actn_values = self.forwardPropagation(x)
+            post_actn_values,pre_actn_values = self.Forward_Prop(x)
             predicted_class = np.argmax(post_actn_values['h' + str(self.L-1)])
             actual_class = np.argmax(y)
             
