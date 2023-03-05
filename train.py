@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import fashion_mnist
+import math
+from tqdm import tqdm
 
 # Load the Fashion-MNIST dataset
 (train_image,train_label),(test_image,test_label)=fashion_mnist.load_data()
@@ -89,3 +91,76 @@ class FNN():
         post_actn_values['h' + str(self.no_of_layer-1)] = self.activation_function(pre_actn_values['a' + str(self.no_of_layer-1)],output_layer=1,return_derivative=0)
 
         return post_actn_values, pre_actn_values
+    #Calculate the value of loss.
+    def loss_value(self, y_h, y):
+        if self.loss_f == 'squared_error':
+            loss_val = 0.5*np.sum((y-y_h)*(y-y_h))
+        elif self.loss_f == 'cross_entropy':
+            Class_i = np.argmax(y)
+            probability_value = y_h[Class_i]
+            #Add small positive quantity to probability_value to avoid zero value.
+            if(probability_value<=0):
+                probability_value = probability_value + 0.00000001		
+            loss_val = -math.log(probability_value)
+        return loss_val
+    def Back_Prop(self, y, post_actn_values, pre_actn_values):
+        #Assume forward propagation has been done. Hence Calculate a and h at each level.
+        #Step1. Compute output gradient
+        #Step2. Traverse each level from top to bottom layer.
+        #Step 2.1 --- Calculate W and b for hidden layers.
+        #Step 2.2 --- Calculate gradient of hidden layer (Activation h).
+        #STep 2.3 --- Calculate gradient of hidden layer (Pre activation a).
+        
+        grad={}
+        f_x=post_actn_values['h' + str(self.no_of_layer-1)]
+        e_y = y.reshape(len(y), 1)
+        
+        # Step 1
+        if self.loss_f == 'cross_entropy':
+            grad['a' + str(self.no_of_layer-1)] = (f_x - e_y)
+        elif self.loss_f == 'squared_error':
+            grad['a' + str(self.no_of_layer-1)] = (f_x - e_y)*f_x*(1-f_x)
+
+        # Step 2
+        for level in range(self.no_of_layer-1, 0, -1):
+            #Step 2.1
+            #Reshape the gradients into appropriate shapes for matrix multiplication
+            grad_a = grad['a' + str(level)]
+            grad_h = post_actn_values['h' + str(level-1)]
+            grad['W' + str(level)] = grad_a[:, np.newaxis] @ grad_h[np.newaxis, :]
+            grad['b' + str(level)] = grad['a' + str(level)]
+
+            #Step 2.2
+            grad['h' + str(level-1)] = self.parameters['W' + str(level)].transpose() @ grad['a' + str(level)]
+
+            #Step 2.3
+            if level >= 2:
+                grad['a' + str(level-1)] = grad['h' + str(level-1)] * self.activation_function(pre_actn_values['a' + str(level-1)], return_derivative=1)	
+
+        return grad
+    def calculate_performance(self, x_test, y_test):
+        correct_predictions = 0
+        y_true = []
+        y_pred = []
+        losses = []
+        
+        for i in tqdm(range(len(x_test))):
+            x = x_test[i]
+            y = y_test[i]
+            
+            activations,pre_activations = self.forwardPropagation(x)
+            predicted_class = np.argmax(activations['h' + str(self.L-1)])
+            actual_class = np.argmax(y)
+            
+            y_true.append(actual_class)
+            y_pred.append(predicted_class)
+            losses.append(self.loss_value(activations['h' + str(self.L-1)], y))
+        
+        y_true = np.array(y_true)
+        y_pred = np.array(y_pred)
+        correct_predictions = np.sum(np.equal(y_true, y_pred))
+        
+        accuracy = (correct_predictions / len(x_test)) * 100
+        loss = np.mean(losses)
+        
+        return accuracy, loss, y_true, y_pred
